@@ -128,11 +128,15 @@ void ObtainSegNormals(
 	}
 }
 
- float CalSegAngle(SegMedianNormals& seg_median_normals,size_t seg_id_i,size_t seg_id_j) {
+ float CalSegAngle(SegMedianNormals& seg_median_normals,size_t seg_id_i,size_t seg_id_j) 
+ {
 	 auto n1 = static_cast<Eigen::Vector3d>(seg_median_normals[seg_id_i]);
 	 auto n2 = static_cast<Eigen::Vector3d>(seg_median_normals[seg_id_j]);
 	 return n1.dot(n2) ;
-}
+ }
+
+
+
 // SEGMENT //
 
 

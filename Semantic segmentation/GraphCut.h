@@ -15,6 +15,7 @@ public:
 		std::vector<double>& SegsHorizontality,
 		std::vector<double>& SegsPlanarity,
 		std::vector<double>& NormSegsGreenness,
+		//std::vector<double>& SegsDensity,
 		std::vector<double>& segs_area,
 		GCoptimizationGeneralGraph* gc);
 
@@ -33,10 +34,11 @@ public:
 	    std::vector<double>& SegsHorizontality,
 		std::vector<double>& SegsPlanarity,
 		std::vector<double>& NormSegsGreenness,
+		//std::vector<double>& SegsDensity,
 		std::vector<double>& segs_area,
 		std::vector <size_t>*resultLabelArray);
  
-    /** */
+    /** Export mesh after GraphCut*/
 	void WriteGCMesh(
 		MeshT& mesh,
 		std::string& export_path,

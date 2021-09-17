@@ -10,7 +10,7 @@ using namespace std;
 int main(int argc, char** argv)
 {   
     //Read data path
-    std::string mesh_path = "data/seg_material_test20210908.obj";
+    std::string mesh_path = "data/seg_material_test20210915.obj";
     std::string label_path = "data/label.dat";
    
 
@@ -19,7 +19,8 @@ int main(int argc, char** argv)
     std::string elevation_out_path = "data/Elevation.off";
     std::string horizontality_out_path = "data/Horizontality.off";
     std::string greenness_out_path = "data/Greenness.off";
-    std::string  export_path = "data/GraphCut.off";
+    std::string density_out_path = "data/Density.off";
+    std::string export_path = "data/GraphCut.off";
     std::string path = "./result.txt";
 
     ofstream out_file;
@@ -36,31 +37,38 @@ int main(int argc, char** argv)
     std::vector<double> seg_areas;
     ObtainSegAreas(mesh, seg_face_handles, &seg_areas);
     
-    auto f_seg = OpenMesh::getProperty<OpenMesh::FaceHandle, size_t>(mesh, "f_seg");
-    for (auto f : mesh.faces()) 
+    
+    //Obtain Greenness
+    std::vector<double> NormSegsGreenness;
+    ObtainTexAttri OTA;
+    OTA.Run(mesh, seg_face_handles, greenness_out_path, &NormSegsGreenness);
+
+    out_file << "NormSegsGreenness " << endl;
+    for (auto e : NormSegsGreenness)
     {
-        if (f.idx() == 20095)
-        {
-            std::cout << f_seg(f) << std::endl;
-        }
-        else if (f.idx() == 14225)
-        {
-            std::cout << f_seg(f) << std::endl;
-        }else if (f.idx() == 12877)
-        {
-            std::cout << f_seg(f) << std::endl;
-        }else if (f.idx() == 12745)
-        {
-            std::cout << f_seg(f) << std::endl;
-        }
-    
+        out_file << e << endl;
     }
-    
+
+ 
+   //Obtain Planarity
+    std::vector<double> SegsPlanarity;
+    SegPlanarity(mesh, seg_face_handles, &SegsPlanarity);
+    WriteMesh(mesh, planarity_out_path, SegsPlanarity);
+
+
+    out_file << "Planarity " << endl;
+    for (auto e : SegsPlanarity)
+    {
+        out_file << e << endl;
+    }
+
     //Obtain Elevation
     std::vector<double> TrisElevation;
     std::vector<double> FacetsElevation;
     std::vector<double> SegsElevation;
-     TriElevation2(mesh,  &TrisElevation);
+    
+   
+    TriElevation2(mesh,  &TrisElevation);
     FacetGeo(mesh, seg_face_handles, TrisElevation, &FacetsElevation,&SegsElevation);
     WriteMesh(mesh, elevation_out_path, FacetsElevation);
    
@@ -85,46 +93,18 @@ int main(int argc, char** argv)
     {
         out_file << e << endl;
     }
-    //Obtain Planarity
-    std::vector<double> TrisPlanarity;
-    std::vector<double> FacetsPlanarity;
-    std::vector<double> SegsPlanarity;
-    TriPlanarity(mesh,&TrisPlanarity);
-    FacetGeo(mesh, seg_face_handles, TrisPlanarity, &FacetsPlanarity,&SegsPlanarity);
-    WriteMesh(mesh, planarity_out_path, SegsPlanarity);
-  
+   
+
+   
+
     
-    out_file << "Planarity " << endl;
-    for (auto e : SegsPlanarity)
-    {
-        out_file << e << endl;
-    }
-
-
-    //Obtain Greenness
-
-    std::vector<double> NormSegsGreenness;
-    ObtainTexAttri OTA;
-    OTA.Run(mesh, seg_face_handles,  greenness_out_path, &NormSegsGreenness);
-
-    out_file << "NormSegsGreenness "<< endl;
-    for (auto e : NormSegsGreenness)
-    {
-        out_file << e<<endl;
-    }
-
+    
     //GraphCut
-    
     std::vector <size_t> resultLabelArray;
     GraphCut GC;
     GC.Run(mesh, seg_face_handles, label_path, SegsElevation, SegsHorizontality, SegsPlanarity, NormSegsGreenness, seg_areas, &resultLabelArray);
     GC.WriteGCMesh(mesh, export_path, seg_face_handles, resultLabelArray);
     
-
-
-
-   
- 
- 
+    int y = 0;
 }
 

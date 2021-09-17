@@ -22,7 +22,7 @@ class ObtainTexAttri {
               const std::array<Eigen::Vector2f, 3>& face_tex_coords,
               std::vector<double>* greenness);
           
-          void NormalizeSegGreenness(std::vector<double>& seg_greenness, std::vector<double>* norm_segs_greenness);
+          void ChangeSegGreenness(std::vector<double>& seg_greenness, std::vector<double>* change_segs_greenness);
           
           /** final step */
           //void Run(MeshT& mesh, SegFaceHandles& seg_face_handles, std::string out_path);

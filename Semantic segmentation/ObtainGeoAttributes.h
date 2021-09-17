@@ -32,15 +32,18 @@ void  TriElevation2(MeshT& mesh,
 	std::vector<double>* TrisElevation);
 void TriElevation3(MeshT& mesh,
 	std::vector<double>* TrisElevation);
-/** Obain Facet Elevation */
+
+
+/** Obain Facet Horizontality */
 void TriHorizontality(
 	 MeshT& mesh,
 	std::vector<double>* TrisHorizontality);
 
-//version 2
-void TriPlanarity(
+
+void SegPlanarity(
 	MeshT& mesh,
-	std::vector<double>* TrisPlanarity);
+	SegFaceHandles& seg_face_handles,
+	std::vector<double>* SegPlanarity);
 //Obtain Facet Planarity
 void FacetGeo(MeshT& mesh,
 	SegFaceHandles& seg_face_handles,
@@ -48,6 +51,18 @@ void FacetGeo(MeshT& mesh,
 	std::vector<double>* FacetsGeo,
 	std::vector<double>* SegGeo
 );
+
+/**  Obatain SegDensity of each segment  */
+//Obatain SegDensity of each triangle
+void ObtainTriSegDensity(MeshT& mesh,
+	std::vector<double>* tri_seg_density);
+void ObtainFacetSegDensity(
+	MeshT& mesh,
+	SegFaceHandles seg_face_handles,
+	std::vector<double>* facet_seg_density
+);
+
+
 //Write mesh
 void WriteMesh(
 	MeshT& mesh,

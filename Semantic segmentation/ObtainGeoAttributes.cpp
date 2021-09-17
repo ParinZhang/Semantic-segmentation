@@ -109,12 +109,11 @@ void  TriElevation2(MeshT& mesh,
 
 
 	pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-	auto test=(*cloud)[0].x;
 	kdtree.setInputCloud(cloud);
 	std::vector<int> pointIdxRadiusSearch;
 	std::vector<float> pointRadiusSquaredDistance;
 	float radius = 36.8;
-
+	
 	for (auto centroid : TriCentroids) {
 		pcl::PointXYZ searchPoint;
 
@@ -171,7 +170,6 @@ void  TriElevation3(MeshT& mesh,
 
 
 	auto ave_edge = ObtainAveEdge(mesh);
-	std::cout << ave_edge << std::endl;
 	auto cir_num = int(round(36.375 / ave_edge));
 	std::vector<std::set <Face>> neibor;
 	for (const auto& f : mesh.faces())
@@ -201,14 +199,6 @@ void  TriElevation3(MeshT& mesh,
 	}
 }
 
-
-
-
-
-
-
-
-
 // Obtain Facet Elevation
 void  TriElevation(
 	 MeshT& mesh,
@@ -217,16 +207,10 @@ void  TriElevation(
 	 //pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
 	 ObtainTriCentroid(mesh,  &TriCentroids);
 
-	
-
-
-
 	 auto ave_edge = ObtainAveEdge(mesh);
-	 std::cout << ave_edge << std::endl;
 	 auto cir_num = int(round(36.375 / ave_edge));
 	 //int cir_num = 10;
 	 
-	
 	 for (auto f : mesh.faces()) 
 	 {
 		 TimeCount FN("Find neighbor");
@@ -248,7 +232,7 @@ void  TriElevation(
 
 		 TrisElevation->emplace_back(face_elevation);
 		 FN.end();
-		 std::cout << "-------------------------" << std::endl;
+		
 	 }
 	 
 
@@ -259,7 +243,7 @@ void  TriElevation(
 
 	};
 
-//Obtain Facet  horizontality
+/** Obtain Facet  horizontality */
 void TriHorizontality(
 	  MeshT& mesh,
 	std::vector<double>* TrisHorizontality){ 
@@ -278,84 +262,74 @@ void TriHorizontality(
 
 }  
 
-//Obtain Facet Planarity
-
-//Version1
-/*
-void FacetPlanarity(
+/**Obtain Segment Planarity*/
+void SegPlanarity(
 	MeshT& mesh,
-	SegFaceHandles& s_f_hs,
-	std::vector<double>* TrisPlanarity) {
-	TrisPlanarity->resize(mesh.n_faces());
+	SegFaceHandles& seg_face_handles,
+	std::vector<double>* SegPlanarity) 
+{   
+	std::vector<MyTraits::Point> TriCentroids;
+	ObtainTriCentroid(mesh, &TriCentroids);
+
+	//auto find_faceid = OpenMesh::PropertyManager<OpenMesh::FaceHandle, size_t>(mesh,"f_seg");
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+	cloud->points.resize(TriCentroids.size());
+	for (std::size_t i = 0; i < cloud->size(); ++i)
+	{    
 	
-	for (const auto& f_hs : s_f_hs) 
-	{  
-		std::vector<Triangle> Triangles;
-		std::vector<size_t> FaceIdxs;
-		for (const auto& f_h : f_hs) 
-		{   
-			size_t FaceIdx = f_h.idx();
-			FaceIdxs.emplace_back(FaceIdx);
-			std::vector<Point> Points;
-			for (const auto& v_h : mesh.fv_range(f_h))
-			{ 				
-				Point pt(mesh.point(v_h)[0], mesh.point(v_h)[1], mesh.point(v_h)[2]);
-				//std::cout << mesh.point(v_h)[0] << std::endl;
-				Points.emplace_back(pt);
-			}
-			Triangles.push_back(Triangle(Points[0],Points[1],Points[2]));
-			
-
-
-		}
-		Plane plane;
-		auto fitting=linear_least_squares_fitting_3(Triangles.begin(), Triangles.end(), plane, CGAL::Dimension_tag<0>());
-		//TrisPlanarity->push_back(fitting);
-		//std::cout << TrisPlanarity->size();
-		for (const auto& f_idx : FaceIdxs) {
-			TrisPlanarity->at(f_idx) = fitting;
-		  
-		}
+		(*cloud)[i].x = TriCentroids[i][0];
+		(*cloud)[i].y = TriCentroids[i][1];
+		(*cloud)[i].z = TriCentroids[i][2];
 	}
-}  
-*/
 
-//	Version2
-void TriPlanarity(
-	MeshT& mesh,
-	std::vector<double>* TrisPlanarity){
-	TrisPlanarity->resize(mesh.n_faces());
-	for (auto f_h : mesh.faces()) 
+
+	pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+	kdtree.setInputCloud(cloud);
+	float radius = 8;
+
+	SegPlanarity->reserve(seg_face_handles.size());
+	auto f_seg = OpenMesh::getProperty<OpenMesh::FaceHandle, size_t>(mesh, "f_seg");
+	for (const auto& s_f_h : seg_face_handles)
 	{   
-		std::set<Point> f_points;
-		for (auto f_h_ring1 : mesh.ff_range(f_h))
+		std::vector<double> fittings;
+		for (const auto& face : s_f_h)
 		{
-			for (auto f_h_ring2: mesh.ff_range(f_h_ring1))
+			pcl::PointXYZ searchPoint;
+			searchPoint.x = TriCentroids[face.idx()][0]; searchPoint.y = TriCentroids[face.idx()][1]; searchPoint.z = TriCentroids[face.idx()][2];
+			std::vector<int> point_idx_radius_search;
+			std::vector<float> point_radius_squared_distance;
+			kdtree.radiusSearch(searchPoint, radius, point_idx_radius_search, point_radius_squared_distance);
+		    
+			std::set<Point> seg_points;
+			for (const auto idx : point_idx_radius_search)
 			{
-				for (auto f_h_ring3 : mesh.ff_range(f_h_ring2)) 
-				{
-					for (auto f_h_ring4 : mesh.ff_range(f_h_ring3)) 
-					{
-						for (auto v_h : mesh.fv_range(f_h_ring4))
-						{
-							Point pt(mesh.point(v_h)[0], mesh.point(v_h)[1], mesh.point(v_h)[2]);
-							f_points.insert(pt);
-						}
-					
-					
-					}				
-				}
-			}
+				auto tri_centroid = TriCentroids[idx];
+				Point point(tri_centroid[0], tri_centroid[1], tri_centroid[2]);
+			    seg_points.insert(point);
 
-		} 
-		Plane plane;
-		auto fitting = linear_least_squares_fitting_3(f_points.begin(), f_points.end(), plane, CGAL::Dimension_tag<0>());
-		TrisPlanarity->at(f_h.idx())=fitting;
-	}	
+			
+			}
+			Plane plane;
+			auto fitting = linear_least_squares_fitting_3(seg_points.begin(), seg_points.end(), plane, CGAL::Dimension_tag<0>());
+			fittings.emplace_back(fitting);
+		}
+		
+		double sum = 0.0;
+		for (const auto& fitting : fittings)
+		{
+
+			sum += fitting;
+		}
+		auto seg_planary = sum / s_f_h.size();
+	
+		SegPlanarity->emplace_back(seg_planary);
+	}
+	
 }
 
 
 
+//Calculate segment attribute based on the triangle attribute
 void FacetGeo(MeshT &mesh,
 	SegFaceHandles& seg_face_handles, 
 	std::vector<double> TrisGeo,
@@ -386,6 +360,96 @@ void FacetGeo(MeshT &mesh,
 	}
 }
 
+//Obtain SegDensity
+void ObtainTriSegDensity(MeshT& mesh,
+	std::vector<double>* tri_seg_density) 
+{
+	std::vector<MyTraits::Point> TriCentroids;
+	ObtainTriCentroid(mesh, &TriCentroids);
+
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+	cloud->points.resize(TriCentroids.size());
+	for (std::size_t i = 0; i < cloud->size(); ++i)
+	{
+		(*cloud)[i].x = TriCentroids[i][0];
+		(*cloud)[i].y = TriCentroids[i][1];
+		(*cloud)[i].z = TriCentroids[i][2];
+	}
+
+
+	pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+	kdtree.setInputCloud(cloud);
+	std::vector<int> pointIdxRadiusSearch;
+	std::vector<float> pointRadiusSquaredDistance;
+	float radius = 10;
+
+	for (auto centroid : TriCentroids) {
+		pcl::PointXYZ searchPoint;
+
+		searchPoint.x = centroid[0];
+		searchPoint.y = centroid[1];
+		searchPoint.z = centroid[2];
+
+		kdtree.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance);
+
+		std::vector<Face> mesh_faces;
+		auto p_manager = OpenMesh::getProperty<OpenMesh::FaceHandle,size_t>(mesh,"f_seg");
+		for (auto face : mesh.faces())
+		{
+			mesh_faces.emplace_back(face);
+
+		}
+
+		std::set<int>neibor_seg_ids;
+		for (const auto& point_idx : pointIdxRadiusSearch)
+		{
+			auto neibor_segid=p_manager(mesh_faces[point_idx]);
+			neibor_seg_ids.insert(neibor_segid);
+
+		}
+		tri_seg_density->emplace_back(neibor_seg_ids.size());		
+	}
+}
+
+void ObtainFacetSegDensity(
+	MeshT& mesh,
+	SegFaceHandles seg_face_handles,
+	std::vector<double>* seg_density_normalize
+) 
+{   
+	
+     std::vector<double> tri_seg_density;
+	ObtainTriSegDensity(mesh, &tri_seg_density);
+	
+	auto max_density = *max_element(tri_seg_density.begin(), tri_seg_density.end());
+	auto min_density = *min_element(tri_seg_density.begin(), tri_seg_density.end());
+
+	std::vector<double> norm_seg_density;
+	for (const auto& t_s_d : tri_seg_density)
+	{    
+		auto n_s_d = (t_s_d - min_density) / (max_density- min_density);
+		norm_seg_density.emplace_back(n_s_d);
+	}
+
+	auto mesh_property_manager = OpenMesh::getProperty<OpenMesh::FaceHandle, size_t>(mesh, "f_seg");
+	std::vector<double> facet_seg_density;
+	for (const auto& s_f_h : seg_face_handles)
+	{   
+		double sum = 0.0;
+		for (const auto& f_h : s_f_h) 
+		{
+			auto f_id = mesh_property_manager(f_h);
+			sum += norm_seg_density[f_id];   
+		}
+		double f_s_d = sum / s_f_h.size();
+		seg_density_normalize->emplace_back(f_s_d);
+	}
+
+	
+}
+
+
+
 
 //Write mesh
 void WriteMesh(
@@ -402,17 +466,13 @@ void WriteMesh(
 		auto p = f_seg[f_h];
 		MeshT::Color f_color;
 		auto robust_tris_geomrtry = segs_geo[f_seg[f_h]];
+	
+			f_color[0] = 222 * (1 - robust_tris_geomrtry);
+			f_color[1] = 222 * (1 - robust_tris_geomrtry);
+			f_color[2] = 222;
 
-		/*double gray = (robust_tris_geomrtry - tris_geometry_min) / (tris_geometry_max-tris_geometry_min);
-		f_color[0] = 255*(gray-0.25f);
-		f_color[1] = 255*0.25;
-		f_color[2] = 255 * (gray+ 0.25f);*/
+			mesh.set_color(f_h, f_color);
 
-		f_color[0] = 0 ;
-		f_color[1] = 255*robust_tris_geomrtry;
-		f_color[2] = 0;
-		
-		mesh.set_color(f_h, f_color);
 	}
 	OpenMesh::IO::Options wopt;
 	wopt += OpenMesh::IO::Options::FaceColor;

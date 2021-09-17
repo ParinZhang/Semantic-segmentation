@@ -141,17 +141,27 @@ void ObtainTexAttri::ObtainTriGreenness(
 
 } 
 
-void ObtainTexAttri::NormalizeSegGreenness(std::vector<double>& seg_greenness, std::vector<double>* norm_segs_greenness)
+void ObtainTexAttri::ChangeSegGreenness(std::vector<double>& seg_greenness, std::vector<double>* change_segs_greenness)
 {
-    auto max_seg_greenness = *max_element(seg_greenness.begin(), seg_greenness.end());
-    auto min_seg_greenness = *min_element(seg_greenness.begin(), seg_greenness.end());
+   // auto max_seg_greenness = *max_element(seg_greenness.begin(), seg_greenness.end());
+   //auto min_seg_greenness = *min_element(seg_greenness.begin(), seg_greenness.end());
 
-       //auto max_seg_greenness = 255;
-    //auto min_seg_greenness = -255;
+    auto max_seg_greenness = 255;
+    auto min_seg_greenness = -255;
+   
     for (auto s_g : seg_greenness) 
-    {
-       double norm_seg_greenness = sqrt((s_g - min_seg_greenness) / (max_seg_greenness - min_seg_greenness));
-       norm_segs_greenness->emplace_back(norm_seg_greenness);
+    {  
+       double seg_greenness = sqrt((s_g - min_seg_greenness) / (max_seg_greenness - min_seg_greenness));
+       
+       if (seg_greenness > 0.725) 
+       {
+           seg_greenness = seg_greenness;
+       }
+       else 
+       { 
+           seg_greenness = pow(seg_greenness, 4);
+       }
+       change_segs_greenness->emplace_back(seg_greenness);
     }
 
 }
@@ -165,7 +175,6 @@ void ObtainTexAttri::Run(MeshT& mesh, SegFaceHandles& seg_face_handles, std::str
     FaceTexCoords(mesh, &face_vertex_coord);
 
     //FaceTexPath(mesh, &face_tex_path, &mp);
-    
     OpenMesh::MPropHandleT<std::map<int, std::string>> mph;
     mesh.get_property_handle(mph, "TextureMapping");
     std::map<int, std::string> mp = mesh.property(mph);
@@ -190,12 +199,9 @@ void ObtainTexAttri::Run(MeshT& mesh, SegFaceHandles& seg_face_handles, std::str
     FacetGeo(mesh, seg_face_handles, greeness, &facets_geo, &segs_geo);
 
     
-    NormalizeSegGreenness(segs_geo,norm_segs_geo);
+    ChangeSegGreenness(segs_geo,norm_segs_geo);
 
 
 
     WriteMesh(mesh, out_path, *norm_segs_geo);
-    int a = 0;
-
-
 }
