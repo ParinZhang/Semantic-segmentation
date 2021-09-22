@@ -10,7 +10,7 @@ using namespace std;
 int main(int argc, char** argv)
 {   
     //Read data path
-    std::string mesh_path = "data/seg_material_test20210915.obj";
+    std::string mesh_path = "data/0922.obj";
     std::string label_path = "data/label.dat";
    
 
@@ -52,7 +52,9 @@ int main(int argc, char** argv)
  
    //Obtain Planarity
     std::vector<double> SegsPlanarity;
-    SegPlanarity(mesh, seg_face_handles, &SegsPlanarity);
+    //SegPlanarity(mesh, seg_face_handles, &SegsPlanarity);
+    DoPlanarity3(mesh, seg_face_handles, &SegsPlanarity);
+    
     WriteMesh(mesh, planarity_out_path, SegsPlanarity);
 
 

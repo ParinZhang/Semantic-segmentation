@@ -39,11 +39,28 @@ void TriHorizontality(
 	 MeshT& mesh,
 	std::vector<double>* TrisHorizontality);
 
+/** Obain Facet Horizontality */
 
+/******* Obain Facet Planarity ******/
 void SegPlanarity(
 	MeshT& mesh,
 	SegFaceHandles& seg_face_handles,
 	std::vector<double>* SegPlanarity);
+
+void DoPlanarity3(
+	MeshT& mesh,
+	SegFaceHandles& seg_face_handles,
+	std::vector<double>* inliners_ratios
+);
+
+void GetInliersLSP(
+	Eigen::Vector4d coffi,
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+	pcl::IndicesPtr inliers,
+	double distance_thres
+);
+//******* Obain Facet Planarity *******/
+
 //Obtain Facet Planarity
 void FacetGeo(MeshT& mesh,
 	SegFaceHandles& seg_face_handles,

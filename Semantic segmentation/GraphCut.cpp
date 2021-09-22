@@ -26,10 +26,10 @@ void GraphCut::ObtainNodeData(
 		
 		node_data n_a;
 		auto seg_id = i;
-		n_a.costs[0] = segs_area[seg_id] * (1 - SegsPlanarity[seg_id] * SegsHorizontality[seg_id] * (1 - SegsElevation[seg_id]) * (1 - NormSegsGreenness[seg_id])*SegsPlanarity[seg_id]);//Ground
-		n_a.costs[1] = segs_area[seg_id] * (1 - SegsPlanarity[seg_id] * NormSegsGreenness[seg_id]*(1 - SegsPlanarity[seg_id]) );//Tree
-		n_a.costs[2] = segs_area[seg_id] * (1 - SegsPlanarity[seg_id] * (1 - SegsHorizontality[seg_id]) * (1 - NormSegsGreenness[seg_id])*(1-SegsPlanarity[seg_id]));//Facade
-		n_a.costs[3] = segs_area[seg_id] * (1 - SegsPlanarity[seg_id] * SegsHorizontality[seg_id] * SegsElevation[seg_id] * (1 - NormSegsGreenness[seg_id])* (1 - SegsPlanarity[seg_id]));//Roof
+		n_a.costs[0] = segs_area[seg_id] * (1 - SegsHorizontality[seg_id] * (1 - SegsElevation[seg_id]) * (1 - NormSegsGreenness[seg_id])*SegsPlanarity[seg_id]);//Ground
+		n_a.costs[1] = segs_area[seg_id] * (1 - SegsHorizontality[seg_id] * NormSegsGreenness[seg_id]*(1 - SegsPlanarity[seg_id]));//Tree
+		n_a.costs[2] = segs_area[seg_id] * (1 - (1 - SegsHorizontality[seg_id]) * (1 - NormSegsGreenness[seg_id])*SegsPlanarity[seg_id]);//Facade
+		n_a.costs[3] = segs_area[seg_id] * (1 -  SegsHorizontality[seg_id] * SegsElevation[seg_id] * (1 - NormSegsGreenness[seg_id])* SegsPlanarity[seg_id]);//Roof
 
 
 		gc->setDataCost(seg_id, n_a.labels[0], n_a.costs[0]);
