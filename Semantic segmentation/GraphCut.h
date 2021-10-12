@@ -37,7 +37,12 @@ public:
 		//std::vector<double>& SegsDensity,
 		std::vector<double>& segs_area,
 		std::vector <size_t>*resultLabelArray);
- 
+	
+
+	void ModifyInitLabel(
+		std::vector <size_t>& seg_init_labels,
+		Eigen::ArrayXXf& topology_map
+	);
     /** Export mesh after GraphCut*/
 	void WriteGCMesh(
 		MeshT& mesh,

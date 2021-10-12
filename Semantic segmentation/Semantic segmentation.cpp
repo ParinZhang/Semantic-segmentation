@@ -5,12 +5,14 @@
 
 #include <fstream> 
 #include <iostream>
+
+#include "TestData.h"
 using namespace std;
 
 int main(int argc, char** argv)
 {   
     //Read data path
-    std::string mesh_path = "data/0922.obj";
+    std::string mesh_path = "data/subTile_1984_2693.obj";
     std::string label_path = "data/label.dat";
    
 
@@ -36,50 +38,37 @@ int main(int argc, char** argv)
     ObtainSegHandles(mesh, label_path, &seg_face_handles, &seg_vertex_handles);
     std::vector<double> seg_areas;
     ObtainSegAreas(mesh, seg_face_handles, &seg_areas);
-    
-    
-    //Obtain Greenness
-    std::vector<double> NormSegsGreenness;
-    ObtainTexAttri OTA;
-    OTA.Run(mesh, seg_face_handles, greenness_out_path, &NormSegsGreenness);
+    Eigen::ArrayXXf topology_map = Eigen::ArrayXXf::Zero(seg_face_handles.size(), seg_face_handles.size());
+    GetSegTopologyMap(mesh, seg_face_handles,  &topology_map);
+    GetSegId(94819, mesh);
 
-    out_file << "NormSegsGreenness " << endl;
-    for (auto e : NormSegsGreenness)
-    {
-        out_file << e << endl;
-    }
+
+    //Obtain Greenness
+    std::vector<double> norm_segs_greenness;
+    ObtainTexAttri OTA;
+    OTA.Run(mesh, seg_face_handles, greenness_out_path, &norm_segs_greenness);
+
+    //Obtain Density
+    std::vector<double> norm_segs_density;
+    ObtainFacetSegDensity(mesh, seg_face_handles, &norm_segs_density);
 
  
    //Obtain Planarity
     std::vector<double> SegsPlanarity;
-    //SegPlanarity(mesh, seg_face_handles, &SegsPlanarity);
+   //SegPlanarity(mesh, seg_face_handles, &SegsPlanarity);
     DoPlanarity3(mesh, seg_face_handles, &SegsPlanarity);
-    
     WriteMesh(mesh, planarity_out_path, SegsPlanarity);
-
-
-    out_file << "Planarity " << endl;
-    for (auto e : SegsPlanarity)
-    {
-        out_file << e << endl;
-    }
+    ExportData("Planarity.txt", SegsPlanarity);
 
     //Obtain Elevation
     std::vector<double> TrisElevation;
     std::vector<double> FacetsElevation;
     std::vector<double> SegsElevation;
-    
-   
     TriElevation2(mesh,  &TrisElevation);
     FacetGeo(mesh, seg_face_handles, TrisElevation, &FacetsElevation,&SegsElevation);
     WriteMesh(mesh, elevation_out_path, FacetsElevation);
-   
-    out_file << "Elevation " << endl;
-    for (auto e : SegsElevation)
-    {
-        out_file << e << endl;
-    }
     
+    ExportData("Elevation.txt", SegsElevation);
 
     //Obtain Horizontality 
     std::vector<double> TrisHorizontality;
@@ -88,25 +77,18 @@ int main(int argc, char** argv)
     TriHorizontality(mesh, &TrisHorizontality);
     FacetGeo(mesh, seg_face_handles, TrisHorizontality,&FacetsHorizontality,&SegsHorizontality);
     WriteMesh(mesh, horizontality_out_path, SegsHorizontality);
+    ExportData("Horizontality.txt", SegsHorizontality);
 
 
-    out_file << "Horizontality " << endl;
-    for (auto e : SegsHorizontality)
-    {
-        out_file << e << endl;
-    }
-   
-
-   
-
-    
-    
     //GraphCut
     std::vector <size_t> resultLabelArray;
     GraphCut GC;
-    GC.Run(mesh, seg_face_handles, label_path, SegsElevation, SegsHorizontality, SegsPlanarity, NormSegsGreenness, seg_areas, &resultLabelArray);
+    GC.Run(mesh, seg_face_handles, label_path, SegsElevation, SegsHorizontality, SegsPlanarity, norm_segs_greenness, seg_areas, &resultLabelArray);
+
     GC.WriteGCMesh(mesh, export_path, seg_face_handles, resultLabelArray);
-    
+
+    GC.ModifyInitLabel(resultLabelArray, topology_map);
+    GC.WriteGCMesh(mesh, export_path, seg_face_handles, resultLabelArray);
     int y = 0;
 }
 

@@ -26,10 +26,10 @@ void GraphCut::ObtainNodeData(
 		
 		node_data n_a;
 		auto seg_id = i;
-		n_a.costs[0] = segs_area[seg_id] * (1 - SegsHorizontality[seg_id] * (1 - SegsElevation[seg_id]) * (1 - NormSegsGreenness[seg_id])*SegsPlanarity[seg_id]);//Ground
-		n_a.costs[1] = segs_area[seg_id] * (1 - SegsHorizontality[seg_id] * NormSegsGreenness[seg_id]*(1 - SegsPlanarity[seg_id]));//Tree
-		n_a.costs[2] = segs_area[seg_id] * (1 - (1 - SegsHorizontality[seg_id]) * (1 - NormSegsGreenness[seg_id])*SegsPlanarity[seg_id]);//Facade
-		n_a.costs[3] = segs_area[seg_id] * (1 -  SegsHorizontality[seg_id] * SegsElevation[seg_id] * (1 - NormSegsGreenness[seg_id])* SegsPlanarity[seg_id]);//Roof
+		n_a.costs[0] = segs_area[seg_id] * (1 - SegsHorizontality[seg_id] * (1 - SegsElevation[seg_id]) *SegsPlanarity[seg_id]);//Ground
+		n_a.costs[1] = segs_area[seg_id] * (1 -  SegsElevation[seg_id]*(1 - SegsPlanarity[seg_id]));//Tree
+		n_a.costs[2] = segs_area[seg_id] * (1 - (1 - SegsHorizontality[seg_id]) *SegsPlanarity[seg_id]);//Facade
+		n_a.costs[3] = segs_area[seg_id] * (1 -  SegsHorizontality[seg_id] * SegsElevation[seg_id]* SegsPlanarity[seg_id]);//Roof
 
 
 		gc->setDataCost(seg_id, n_a.labels[0], n_a.costs[0]);
@@ -133,6 +133,58 @@ void GraphCut::Run(
 	}
 
 }
+
+
+
+
+
+//change 
+void GraphCut::ModifyInitLabel(
+	std::vector <size_t>& seg_init_labels,
+	Eigen::ArrayXXf& topology_map
+) 
+{   
+	size_t modify_times = 0;
+	for (size_t seg_id=0; seg_id< seg_init_labels.size(); seg_id++)
+	{
+		if (seg_init_labels[seg_id] == 2)
+		{
+			size_t facet_adjacent_roof = 0;
+			for (size_t i = 0; i < seg_init_labels.size(); i++)
+			{
+				if (topology_map(seg_id, i) == 1 && seg_init_labels[i] == 3)
+				{
+					facet_adjacent_roof++;
+				}
+			};
+			if (facet_adjacent_roof == 0)
+			{
+				for (size_t i = 0; i < seg_init_labels.size(); i++)
+				{
+					if (topology_map(seg_id, i) == 1 && seg_init_labels[i] == 1)
+					{
+						seg_init_labels[seg_id] = 1;
+						modify_times++;
+					};
+
+				}
+			
+			}
+ 			
+
+		}
+	}
+	std::cout << modify_times << std::endl;
+	if (modify_times!=0)
+	{
+		ModifyInitLabel(seg_init_labels, topology_map);
+	}
+}
+
+
+
+
+
 
 //Export the result of GraphCut
 void GraphCut::WriteGCMesh(

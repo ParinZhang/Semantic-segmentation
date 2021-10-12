@@ -12,7 +12,7 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/linear_least_squares_fitting_3.h>
 #include <opencv2/core/core.hpp>
-#include "opencv2/highgui/highgui.hpp"
+#include <opencv2/highgui/highgui.hpp>
 
 // OPEN MESH //
 struct MyTraits : public OpenMesh::DefaultTraits

@@ -135,7 +135,39 @@ void ObtainSegNormals(
 	 return n1.dot(n2) ;
  }
 
+ //Obtain topology map
+ void GetSegTopologyMap(
+	 MeshT& mesh,
+	 SegFaceHandles& seg_face_handles,
+	 Eigen::ArrayXXf* topology_map
+ )
+ {
+	 //Eigen::ArrayXXf topology_map = Eigen::ArrayXXf::Zero(3, 4);
+	 auto property_manager = OpenMesh::getProperty<OpenMesh::FaceHandle, size_t>(mesh, "f_seg");
+	 for (const auto& s_f_h : seg_face_handles)
+	 {
 
+		 size_t this_seg_id = property_manager(s_f_h.front());
+		 for (const auto& face : s_f_h)
+		 {
+			 for (const auto h_e : mesh.fh_range(face))
+			 {
+				 if (mesh.opposite_face_handle(h_e).idx() != -1)
+				 {
+					 auto opp_f_h = mesh.opposite_face_handle(h_e);
+					 auto neibor_seg_id = property_manager(opp_f_h);
+					 (*topology_map)(this_seg_id, neibor_seg_id) = 1;
+					 (*topology_map)(neibor_seg_id, this_seg_id) = 1;
+
+				 }
+
+			 }
+		 }
+		 //topology_map->insert(std::pair<size_t, std::set<size_t>>(this_seg_id, neibor_classify_labels));
+		 (*topology_map)(this_seg_id, this_seg_id) = 0;
+	 }
+
+ }
 
 // SEGMENT //
 

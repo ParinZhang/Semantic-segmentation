@@ -215,7 +215,9 @@
     <ClCompile Include="GraphCut.cpp" />
     <ClCompile Include="ObtainGeoAttributes.cpp" />
     <ClCompile Include="ObtainTexAttributes.cpp" />
+    <ClCompile Include="PlanarityOpt.cpp" />
     <ClCompile Include="Semantic segmentation.cpp" />
+    <ClCompile Include="TestData.cpp" />
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
@@ -223,6 +225,8 @@
     <ClInclude Include="GraphCut.h" />
     <ClInclude Include="ObtainGeoAttributes.h" />
     <ClInclude Include="ObtainTexAttributes.h" />
+    <ClInclude Include="PlanarityOpt.h" />
+    <ClInclude Include="TestData.h" />
     <ClInclude Include="timer.h" />
     <ClInclude Include="types.h" />
     <ClInclude Include="util.h" />

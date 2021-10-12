@@ -54,3 +54,9 @@ void ObtainSegNormals(
 /**Cal COS value of angel of segments */
 float CalSegAngle(SegMedianNormals& seg_median_normals, size_t seg_id_i, size_t seg_id_j);
 
+/**Obtain Seg Topology Map*/
+void GetSegTopologyMap(
+	MeshT& mesh,
+	SegFaceHandles& seg_face_handles,
+	Eigen::ArrayXXf* topology_map
+);

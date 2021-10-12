@@ -8,9 +8,9 @@ void ObtainTriCentroid(
 )
 {
 	TriCentroids->reserve(mesh.n_faces());
-	for (const auto& face_handles : mesh.faces()) 
+	for (const auto& face_handle : mesh.faces()) 
 	{
-			auto pt = mesh.calc_centroid(face_handles);
+			auto pt = mesh.calc_centroid(face_handle);
 			TriCentroids->emplace_back(pt);
 	}
 
@@ -89,6 +89,8 @@ std::set<Face> GetKRingFaces(const MeshT& mesh, const int k, const Face& f)
 
 
 };
+
+//** Elevation    *//
 
 //Version-2 Obtain Facet Elevation
 void  TriElevation2(MeshT& mesh,
@@ -242,8 +244,10 @@ void  TriElevation(
 
 
 	};
+//** Elevation     *//
 
-/** Obtain Facet  horizontality */
+//**Horizontality**//
+/* Obtain Facet  horizontality */
 void TriHorizontality(
 	  MeshT& mesh,
 	std::vector<double>* TrisHorizontality){ 
@@ -261,7 +265,9 @@ void TriHorizontality(
 
 
 }  
+//** Horizontality**//
 
+//** Planarity**//
 /**Obtain Segment Planarity*/
 /*
 void SegPlanarity(
@@ -403,7 +409,7 @@ void DoPlanarity3(
 		}
 
 		pcl::IndicesPtr inliers(new std::vector <int>);
-		double distance_thres = 0.5;
+		double distance_thres = 0.3;
 		GetInliersLSP(coffi, cloud, inliers, distance_thres);
 
 
@@ -468,7 +474,10 @@ void FacetGeo(MeshT &mesh,
 	}
 }
 
-//Obtain SegDensity
+//** Planarity**//
+
+//** Density **//
+/* Obtain Triangle SegDensity */
 void ObtainTriSegDensity(MeshT& mesh,
 	std::vector<double>* tri_seg_density) 
 {
@@ -491,7 +500,8 @@ void ObtainTriSegDensity(MeshT& mesh,
 	std::vector<float> pointRadiusSquaredDistance;
 	float radius = 10;
 
-	for (auto centroid : TriCentroids) {
+	for (auto centroid : TriCentroids) 
+	{
 		pcl::PointXYZ searchPoint;
 
 		searchPoint.x = centroid[0];
@@ -519,47 +529,72 @@ void ObtainTriSegDensity(MeshT& mesh,
 	}
 }
 
+//
 void ObtainFacetSegDensity(
 	MeshT& mesh,
 	SegFaceHandles seg_face_handles,
-	std::vector<double>* seg_density_normalize
-) 
+	std::vector<double>* norm_ave_density)
 {   
 	
     std::vector<double> tri_seg_density;
 	ObtainTriSegDensity(mesh, &tri_seg_density);
 	
-	auto max_density = *max_element(tri_seg_density.begin(), tri_seg_density.end());
-	auto min_density = *min_element(tri_seg_density.begin(), tri_seg_density.end());
-
-	std::vector<double> norm_seg_density;
+	
+	std::vector<double> facets_seg_density;
 	for (const auto& t_s_d : tri_seg_density)
-	{    
-		auto n_s_d = (t_s_d - min_density) / (max_density- min_density);
-		norm_seg_density.emplace_back(n_s_d);
+	{   
+		double f_s_d = 0;
+		f_s_d += t_s_d;
+		//average
+		auto f_s_d = f_s_d / (double)tri_seg_density.size(); 
+		//medium												
+		/* 
+		sort(tri_seg_density.begin(),tri_seg_density.end());
+		auto f_s_d = f_s_d / (double)tri_seg_density.size(); 
+		*/
+		facets_seg_density.emplace_back(f_s_d);
 	}
 
-	auto mesh_property_manager = OpenMesh::getProperty<OpenMesh::FaceHandle, size_t>(mesh, "f_seg");
-	std::vector<double> facet_seg_density;
-	for (const auto& s_f_h : seg_face_handles)
+	//average
+	double ave_density;
+	ave_density= std::accumulate(facets_seg_density.begin(), facets_seg_density.end(), 0.);
+	//std::vector<double> norm_ave_density;
+	for (const auto& f_s_d : facets_seg_density)
 	{   
-		double sum = 0.0;
-		for (const auto& f_h : s_f_h) 
+		if ((f_s_d / ave_density) < 1)
 		{
-			auto f_id = mesh_property_manager(f_h);
-			sum += norm_seg_density[f_id];   
+			norm_ave_density->emplace_back(f_s_d / ave_density);
+		}else
+		{
+			norm_ave_density->emplace_back(1.0);
 		}
-		double f_s_d = sum / s_f_h.size();
-		seg_density_normalize->emplace_back(f_s_d);
+		
+	}
+
+	//medium
+	double medium_density;
+	medium_density = facets_seg_density[facets_seg_density.size()/2];
+	std::vector<double> norm_med_density;
+	for (const auto& f_s_d : facets_seg_density)
+	{
+		if ((f_s_d / medium_density) < 1)
+		{
+			norm_med_density.emplace_back(f_s_d / medium_density);
+		}
+		else
+		{
+			norm_med_density.emplace_back(1.0);
+		}
 	}
 
 	
 }
 
+//** Density **//
 
 
 
-//Write mesh
+//** Write mesh **//
 void WriteMesh(
 	MeshT& mesh,
 	std::string& out_path,
@@ -592,6 +627,7 @@ void WriteMesh(
 	}
 
 }
+//** Write mesh **//
 
 
 
